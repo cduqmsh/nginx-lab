@@ -17,7 +17,7 @@
 - [cors-nginx](./example-conf/cors.conf)
 - [image-filter-nginx](./example-conf/image-filter.conf)
 - [logrotate-nginx](./example-conf/nginx-logrotate.conf)
-- [redirect-nginx](./example-conf/redircet.conf)
+- [redirect-nginx](./example-conf/redirect.conf)
 - [site-nginx](./example-conf/www.conf)
   
 ## Troubleshooting
