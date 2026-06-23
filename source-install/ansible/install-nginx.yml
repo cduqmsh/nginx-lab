@@ -1,0 +1,194 @@
+## APT-Get Update
+- name: apt-get update
+  shell: apt-get update
+
+## Install Dir /usr/local/nginx
+### Make Install Dir ###
+- name: Make Nginx Install Dir
+  file:
+    path: /home/user/utils/nginx
+    state: directory
+
+### Make Nginx Dir ###
+- name: Make conf.d Dir
+  file:
+    path: /usr/local/nginx/conf.d
+    state: directory
+    owner: root
+    group: root
+
+- name: Make Nginx SSL Dir
+  file:
+    path: /usr/local/nginx/certs/joins
+    state: directory
+    owner: root
+    group: root
+
+- name: Upload Nginx SSL File
+  copy: 
+    src: wild.joins/
+    dest: /usr/local/nginx/certs/joins
+    owner: root
+    group: root
+    mode: go+r
+
+- name: Make logs Dir
+  file:
+    path: /logs/nginx
+    state: directory
+    owner: root
+    group: root
+
+### Package Install ### - image filter 모듈 설치 시 필요하나 사용을 거의 안함으로 주석 처리 (25.10.27)
+- name: Install specific packages only
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - libssl-dev
+      - libpcre2-dev
+      - zlib1g-dev
+      - unzip
+    state: present
+    install_recommends: no   # 추천 패키지는 설치하지 않음
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+
+### Copy Nginx File & Module ###
+- name: Copy Nginx Install & Header Module Install File 
+  copy:
+    src: "{{ item }}"
+    dest: /home/user/utils/nginx
+    owner: root
+    group: root
+  with_items: 
+    - "{{ nginx_version_file }}"
+    - "{{ nginx_headers_more_module_file }}"
+
+- name: Copy libgd Install File 
+  copy:
+    src: libgd-2.3.3.tar.gz
+    dest: /home/user/utils/nginx
+    owner: root
+    group: root
+
+### Unarchive Nginx File & Module ###
+- name: Extract Nginx File
+  unarchive:
+    src: /home/user/utils/nginx/{{ item }}
+    dest: /home/user/utils/nginx
+    owner: root
+    group: root
+    remote_src: yes
+  with_items:
+    - "{{ nginx_version_file }}"
+    - "{{ nginx_headers_more_module_file }}"
+
+- name: Extract libgd Install File
+  unarchive:
+    src: /home/user/utils/nginx/libgd-2.3.3.tar.gz
+    dest: /home/user/utils/nginx
+    owner: root
+    group: root
+    remote_src: yes
+
+## Copy libgd Configure File & make & make install ##
+- name: Copy Template libgd configure
+  template: 
+    src: libgd-configure.sh.j2
+    dest: /home/user/utils/nginx/libgd-2.3.3/libgd-configure.sh
+    owner: root
+    group: root
+    mode: 0777
+
+- name: Run libgd-configure.sh.j2
+  shell: /home/user/utils/nginx/libgd-2.3.3/./libgd-configure.sh
+  args:
+    chdir: /home/user/utils/nginx/libgd-2.3.3
+  become: True
+
+- name: make install libgd
+  shell: make && make install
+  args:
+    chdir: /home/user/utils/nginx/libgd-2.3.3
+  become: True
+
+## libdg Symboliclink
+- name: libgd.so
+  shell: ln -s /usr/local/lib/libgd.so.3.0.11 /usr/lib64/libgd.so
+  ignore_errors: true
+  become: True
+
+- name: libgd.so.3
+  shell: ln -s /usr/local/lib/libgd.so.3.0.11 /usr/lib64/libgd.so.3
+  ignore_errors: true
+  become: True
+
+### Copy Nginx Install Configure File ### 
+- name: Copy Template nginx-configure
+  template: 
+    src: nginx-configure.sh.j2
+    dest: /home/user/utils/nginx/{{ nginx_version }}/nginx-configure.sh
+    owner: root
+    group: root
+    mode: 0777
+
+### Run Nginx Configure ###  
+- name: Run nginx-configure.sh.j2
+  shell: /home/user/utils/nginx/{{ nginx_version }}/./nginx-configure.sh
+  args:
+    chdir: /home/user/utils/nginx/{{ nginx_version }}
+  become: True
+  
+- name: make install Nginx
+  shell: make && make install
+  args:
+    chdir: /home/user/utils/nginx/{{ nginx_version }}
+  become: True
+  
+### Set Default Conf File ###
+- name: Remove Original File
+  shell: rm -rvf /usr/local/nginx/nginx.conf
+  become: True
+  
+- name: Copy nginx.conf File
+  copy:
+    src: nginx.conf
+    dest: /usr/local/nginx/conf
+    owner: root
+    group: root
+  become: True
+  
+- name: Copy default.conf File
+  copy:
+    src: default.conf
+    dest: /usr/local/nginx/conf.d
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy upstream.conf File
+  copy:
+    src: upstream.conf
+    dest: /usr/local/nginx/conf.d
+    owner: root
+    group: root
+  become: True
+
+### Copy Nginx Service File ###  
+- name: Copy Nginx Service File
+  copy:
+    src: nginx.service
+    dest: /usr/lib/systemd/system
+    owner: root
+    group: root
+    mode: 0644
+
+### Systemctl enabled  ###
+- name: Enable service nginx and ensure it
+  systemd: name=nginx.service enabled=yes
+
+### Systemctl daemon-reload
+- name: Systemctl daemon reload
+  shell: systemctl daemon-reload
+  become: True
