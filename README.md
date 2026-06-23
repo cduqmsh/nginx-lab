@@ -17,12 +17,12 @@
 - [cors-nginx](./example-conf/cors.conf)
 - [image-filter-nginx](./example-conf/image-filter.conf)
 - [logrotate-nginx](./example-conf/nginx-logrotate.conf)
-- [redirect-nginx](./example-conf/redirecet.conf)
+- [redirect-nginx](./example-conf/redircet.conf)
 - [site-nginx](./example-conf/www.conf)
   
 ## Troubleshooting
 
-- [nginx-403](./troubleshooing/nginx-403.md)
-- [nginx-error-page](./troubleshooing/nginx-error-page.md)
-- [nginx-insecure](./troubleshooing/nginx-insecure.md)
-- [nginx-response-code](./troubleshooing/nginx-response-code.md)
+- [nginx-403](./troubleshooting/nginx-403.md)
+- [nginx-error-page](./troubleshooting/nginx-error-page.md)
+- [nginx-insecure](./troubleshooting/nginx-insecure.md)
+- [nginx-response-code](./troubleshooting/nginx-response-code.md)
